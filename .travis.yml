@@ -1,0 +1,26 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t highvelcty/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run -e CI=true highvelcty/react-test npm test
+
+after_success:
+  - docker build -t highvelcty/multi-client ./client
+  - docker build -t highvelcty/multi-nginx ./nginx
+  - docker build -t highvelcty/multi-server ./server
+  - docker build -t highvelcty/multi-worker ./worker
+  # Log in to the docker CLI
+  # Create these environment variables at travis-ci.org for the multi-docker
+  # project.
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin      
+  # Take those images and push them to docker hub
+  - docker push highvelcty/multi-client
+  - docker push highvelcty/multi-nginx
+  - docker push highvelcty/multi-server
+  - docker push highvelcty/multi-worker
+
